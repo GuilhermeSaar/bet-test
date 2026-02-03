@@ -22,6 +22,21 @@ public class ScannerResponse {
     private boolean isValueBet;
     private String confidenceLevel; // LOW, MEDIUM, HIGH
 
+    public ScannerResponse(double homeAvgScored, double homeAvgConceded, double awayAvgScored, double awayAvgConceded, double homeOverPercent, double awayOverPercent, double expectedTotalGoals, double probabilityOver25, double fairOddOver25, double marketOdd, boolean isValueBet, String confidenceLevel) {
+        this.homeAvgScored = homeAvgScored;
+        this.homeAvgConceded = homeAvgConceded;
+        this.awayAvgScored = awayAvgScored;
+        this.awayAvgConceded = awayAvgConceded;
+        this.homeOverPercent = homeOverPercent;
+        this.awayOverPercent = awayOverPercent;
+        this.expectedTotalGoals = expectedTotalGoals;
+        this.probabilityOver25 = probabilityOver25;
+        this.fairOddOver25 = fairOddOver25;
+        this.marketOdd = marketOdd;
+        this.isValueBet = isValueBet;
+        this.confidenceLevel = confidenceLevel;
+    }
+
     public double getHomeAvgScored() {
         return homeAvgScored;
     }
