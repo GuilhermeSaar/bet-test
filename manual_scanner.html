@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Over 2.5 Goals Scanner</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #e2e8f0;
+            --primary-color: #3b82f6;
+            --accent-color: #10b981;
+            --danger-color: #ef4444;
+            --input-bg: #334155;
+            --border-color: #475569;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            gap: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin: 0;
+            background: linear-gradient(to right, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Match Input Styling */
+        .match-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            /* Space between inputs */
+            margin-bottom: 8px;
+        }
+
+        .column-labels {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding-left: 2px;
+        }
+
+        .col-label {
+            width: 50px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .score-input {
+            width: 50px !important;
+            text-align: center;
+            padding: 8px !important;
+            font-weight: bold;
+            font-size: 1.1rem !important;
+            /* Hide Spinners */
+            -moz-appearance: textfield;
+        }
+
+        .score-input::-webkit-outer-spin-button,
+        .score-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .separator {
+            color: #94a3b8;
+            font-weight: bold;
+        }
+
+        .analyze-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary-color), #2563eb);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+
+        .analyze-btn:active {
+            transform: translateY(0);
+        }
+
+        .secondary-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 16px;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .secondary-btn:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: var(--text-color);
+        }
+
+        /* Results Section */
+        #results {
+            display: none;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .badge-danger {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .badge-warning {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            text-align: center;
+        }
+
+        .stat-box {
+            background-color: rgba(255, 255, 255, 0.03);
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .prob-section {
+            margin-top: 24px;
+            padding: 20px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Selected Bets Cart */
+        .cart-section {
+            border-top: 1px solid var(--border-color);
+            margin-top: 30px;
+            padding-top: 20px;
+        }
+
+        .cart-header {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .bet-card {
+            background-color: #263345;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+        }
+
+        .bet-card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .bet-card-stats {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        .remove-bet {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: transparent;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .remove-bet:hover {
+            color: var(--danger-color);
+        }
+
+        .loading {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Over 2.5 Scanner</h1>
+            <p style="color: #94a3b8;">Enter scores for last 5 games (GP = Gols Pró, GS = Gols Sofridos).</p>
+        </div>
+
+        <!-- Input Form -->
+        <div class="card">
+            <div class="grid-2">
+                <!-- Home Team -->
+                <div>
+                    <div class="form-group">
+                        <label>Home Team Name</label>
+                        <input type="text" id="homeTeam" placeholder="e.g. Arsenal">
+                    </div>
+                    <div class="form-group">
+                        <label>Last 5 Matches</label>
+                        <div class="column-labels">
+                            <div class="col-label" title="Gols Pró">GP</div>
+                            <div class="col-label" style="opacity:0">-</div> <!-- Spacer -->
+                            <div class="col-label" title="Gols Sofridos">GS</div>
+                        </div>
+                        <div id="homeMatchesContainer">
+                            <div class="match-row"><input type="number" class="score-input home-s"
+                                    data-next="home-c-0"><span class="separator">-</span><input type="number"
+                                    class="score-input home-c" id="home-c-0" data-next="home-s-1"></div>
+                            <div class="match-row"><input type="number" class="score-input home-s" id="home-s-1"
+                                    data-next="home-c-1"><span class="separator">-</span><input type="number"
+                                    class="score-input home-c" id="home-c-1" data-next="home-s-2"></div>
+                            <div class="match-row"><input type="number" class="score-input home-s" id="home-s-2"
+                                    data-next="home-c-2"><span class="separator">-</span><input type="number"
+                                    class="score-input home-c" id="home-c-2" data-next="home-s-3"></div>
+                            <div class="match-row"><input type="number" class="score-input home-s" id="home-s-3"
+                                    data-next="home-c-3"><span class="separator">-</span><input type="number"
+                                    class="score-input home-c" id="home-c-3" data-next="home-s-4"></div>
+                            <div class="match-row"><input type="number" class="score-input home-s" id="home-s-4"
+                                    data-next="home-c-4"><span class="separator">-</span><input type="number"
+                                    class="score-input home-c" id="home-c-4" data-next="marketOdd"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Away Team -->
+                <div>
+                    <div class="form-group">
+                        <label>Away Team Name</label>
+                        <input type="text" id="awayTeam" placeholder="e.g. Chelsea">
+                    </div>
+                    <div class="form-group">
+                        <label>Last 5 Matches</label>
+                        <div class="column-labels">
+                            <div class="col-label" title="Gols Pró">GP</div>
+                            <div class="col-label" style="opacity:0">-</div>
+                            <div class="col-label" title="Gols Sofridos">GS</div>
+                        </div>
+                        <div id="awayMatchesContainer">
+                            <div class="match-row"><input type="number" class="score-input away-s"
+                                    data-next="away-c-0"><span class="separator">-</span><input type="number"
+                                    class="score-input away-c" id="away-c-0" data-next="away-s-1"></div>
+                            <div class="match-row"><input type="number" class="score-input away-s" id="away-s-1"
+                                    data-next="away-c-1"><span class="separator">-</span><input type="number"
+                                    class="score-input away-c" id="away-c-1" data-next="away-s-2"></div>
+                            <div class="match-row"><input type="number" class="score-input away-s" id="away-s-2"
+                                    data-next="away-c-2"><span class="separator">-</span><input type="number"
+                                    class="score-input away-c" id="away-c-2" data-next="away-s-3"></div>
+                            <div class="match-row"><input type="number" class="score-input away-s" id="away-s-3"
+                                    data-next="away-c-3"><span class="separator">-</span><input type="number"
+                                    class="score-input away-c" id="away-c-3" data-next="away-s-4"></div>
+                            <div class="match-row"><input type="number" class="score-input away-s" id="away-s-4"
+                                    data-next="away-c-4"><span class="separator">-</span><input type="number"
+                                    class="score-input away-c" id="away-c-4" data-next="marketOdd"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <label>Market Odd (Over 2.5)</label>
+                <input type="number" step="0.01" id="marketOdd" placeholder="e.g. 1.85" style="max-width: 200px;">
+            </div>
+
+            <button class="analyze-btn" onclick="analyzeMatch()">Analyze Match</button>
+        </div>
+
+        <!-- Results Container -->
+        <div id="results" class="card">
+            <div class="result-header">
+                <div>
+                    <h2 style="margin: 0; font-size: 1.5rem;">Analysis Result</h2>
+                    <div style="font-size: 0.9rem; color: #94a3b8; margin-top: 4px;">
+                        Value Bet: <span id="valueBetBadge" class="badge">Checking...</span>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.9rem; color: #94a3b8;">Confidence</div>
+                    <div id="confidenceLevel" style="font-weight: bold; color: var(--text-color);">--</div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="totalxG">0.00</div>
+                    <div class="stat-label">Total Goal Expectation</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="probOver">0%</div>
+                    <div class="stat-label">Probability Over 2.5</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="fairOdd">0.00</div>
+                    <div class="stat-label">Fair Odd</div>
+                </div>
+            </div>
+
+            <div class="prob-section">
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 1.2rem; font-weight: bold;" id="homeStats">0.0 / 0.0</div>
+                    <div style="font-size: 0.8rem; color: #94a3b8;">Home xG (Scored/Conceded)</div>
+                </div>
+                <div
+                    style="text-align: center; flex: 1; border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size: 1.2rem; font-weight: bold;" id="awayStats">0.0 / 0.0</div>
+                    <div style="font-size: 0.8rem; color: #94a3b8;">Away xG (Scored/Conceded)</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                    <div style="font-size: 1.2rem; font-weight: bold; color: var(--accent-color);" id="edge">0%</div>
+                    <div style="font-size: 0.8rem; color: #94a3b8;">Estimated Edge</div>
+                </div>
+            </div>
+
+            <!-- Add to Cart Button -->
+            <button class="secondary-btn" onclick="addToCart()">+ Add this analysis to my list</button>
+        </div>
+
+        <!-- Selected Bets Cart -->
+        <div class="cart-section" id="cartSection" style="display: none;">
+            <div class="cart-header">
+                <span>📋 Selected Bets</span>
+                <span style="font-size: 0.9rem; color: #64748b; font-weight: normal;">(Locally saved)</span>
+            </div>
+            <div class="cart-grid" id="cartGrid">
+                <!-- Cards will be injected here -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // State to hold current analysis
+        let currentAnalysis = null;
+        let savedBets = [];
+
+        // Auto-Focus Logic
+        document.addEventListener('input', function (e) {
+            if (e.target.classList.contains('score-input')) {
+                const val = e.target.value;
+                // If value length is 1, move to next
+                if (val.length >= 1) {
+                    const nextId = e.target.getAttribute('data-next');
+                    if (nextId) {
+                        const nextEl = document.getElementById(nextId);
+                        if (nextEl) nextEl.focus();
+                    }
+                }
+            }
+        });
+
+        async function analyzeMatch() {
+            // 1. Gather Data & Concatenate
+            const homeTeam = document.getElementById('homeTeam').value || "Home";
+            const awayTeam = document.getElementById('awayTeam').value || "Away";
+            const marketOdd = parseFloat(document.getElementById('marketOdd').value);
+
+            // Helper to collect scores
+            function getScores(prefix) {
+                const scores = [];
+                const rows = document.querySelectorAll(`#${prefix}MatchesContainer .match-row`);
+                rows.forEach(row => {
+                    const s = row.querySelector(`.${prefix}-s`).value;
+                    const c = row.querySelector(`.${prefix}-c`).value;
+                    if (s !== "" && c !== "") {
+                        scores.push(`${s}-${c}`);
+                    }
+                });
+                return scores;
+            }
+
+            const homeScores = getScores('home');
+            const awayScores = getScores('away');
+
+            if (homeScores.length === 0 || awayScores.length === 0 || !marketOdd) {
+                alert("Please fill in match scores and market odd.");
+                return;
+            }
+
+            const payload = {
+                homeTeam: homeTeam,
+                awayTeam: awayTeam,
+                homeLastMatches: homeScores,
+                awayLastMatches: awayScores,
+                marketOddOver25: marketOdd
+            };
+
+            const btn = document.querySelector('.analyze-btn');
+            btn.innerHTML = "Analyzing...";
+            btn.classList.add('loading');
+
+            try {
+                // 2. Call API
+                const response = await fetch('http://localhost:8080/api/scanner/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("API Request Failed");
+
+                const data = await response.json();
+
+                // Save payload metadata to result for the cart
+                data.homeTeam = homeTeam;
+                data.awayTeam = awayTeam;
+
+                currentAnalysis = data; // Store for cart
+                renderResults(data);
+
+            } catch (error) {
+                console.error(error);
+                alert("Error analyzing match. Ensure server is running.");
+            } finally {
+                btn.innerHTML = "Analyze Match";
+                btn.classList.remove('loading');
+            }
+        }
+
+        function renderResults(data) {
+            document.getElementById('results').style.display = 'block';
+
+            // Total xG
+            document.getElementById('totalxG').textContent =
+                data.expectedTotalGoals.toFixed(2);
+
+            // Probability
+            const probElem = document.getElementById('probOver');
+            const fairOddElem = document.getElementById('fairOdd');
+            const edgeElem = document.getElementById('edge');
+
+            // Value Bet Badge
+            const badge = document.getElementById('valueBetBadge');
+
+            // Confidence
+            document.getElementById('confidenceLevel').textContent =
+                data.confidenceLevel;
+
+            // Stats
+            document.getElementById('homeStats').textContent =
+                `${data.homeAvgScored} / ${data.homeAvgConceded}`;
+            document.getElementById('awayStats').textContent =
+                `${data.awayAvgScored} / ${data.awayAvgConceded}`;
+
+            // 🚫 FILTERED GAME
+            if (data.probabilityOver25 === 0) {
+                probElem.textContent = "FILTERED";
+                fairOddElem.textContent = "--";
+                edgeElem.textContent = "--";
+                edgeElem.style.color = "#94a3b8";
+
+                badge.textContent = "NO BET";
+                badge.className = "badge badge-warning";
+
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+
+            // ✅ NORMAL FLOW
+            probElem.textContent = data.probabilityOver25 + "%";
+            fairOddElem.textContent = data.fairOddOver25.toFixed(2);
+
+            if (data.valueBet) {
+                badge.textContent = "YES - VALUE BET";
+                badge.className = "badge badge-success";
+            } else {
+                badge.textContent = "NO VALUE";
+                badge.className = "badge badge-danger";
+            }
+
+            // Edge calculation (safe)
+            let edgeText = "--";
+            if (data.fairOddOver25 > 0) {
+                const edge =
+                    ((data.marketOdd - data.fairOddOver25) / data.fairOddOver25 * 100).toFixed(1);
+                edgeText = (data.valueBet ? "+" : "") + edge + "%";
+            }
+
+            edgeElem.textContent = edgeText;
+            edgeElem.style.color = data.valueBet
+                ? "var(--accent-color)"
+                : "var(--danger-color)";
+
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Cart Functions
+        function addToCart() {
+            if (!currentAnalysis) return;
+
+            // Prevent duplicates
+            const exists = savedBets.some(b => b.homeTeam === currentAnalysis.homeTeam && b.awayTeam === currentAnalysis.awayTeam);
+            if (exists) {
+                alert("This match is already in your list.");
+                return;
+            }
+
+            savedBets.push(currentAnalysis);
+            renderCart();
+            clearForm();
+        }
+
+        function clearForm() {
+            // Clear inputs
+            document.getElementById('homeTeam').value = '';
+            document.getElementById('awayTeam').value = '';
+            document.getElementById('marketOdd').value = '';
+
+            // Clear score inputs
+            const inputs = document.querySelectorAll('.score-input');
+            inputs.forEach(input => input.value = '');
+
+            // Hide results
+            document.getElementById('results').style.display = 'none';
+            currentAnalysis = null;
+
+            // Focus on first input
+            document.getElementById('homeTeam').focus();
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function removeFromCart(index) {
+            savedBets.splice(index, 1);
+            renderCart();
+        }
+
+        function renderCart() {
+            const section = document.getElementById('cartSection');
+            const grid = document.getElementById('cartGrid');
+            grid.innerHTML = "";
+
+            if (savedBets.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+
+            savedBets.forEach((bet, index) => {
+                const card = document.createElement('div');
+                card.className = 'bet-card';
+
+                // Check for 'filtered' state (prob == 0) matching renderResults logic
+                const isFiltered = bet.probabilityOver25 === 0;
+
+                const isValue = bet.valueBet;
+                let statusText = isValue ? 'VALUE BET ✅' : 'NO VALUE';
+                let statusColor = isValue ? 'var(--accent-color)' : '#94a3b8';
+
+                // Override for filtered/no-bet scenario
+                if (isFiltered) {
+                    statusText = 'NO BET (Filtered)';
+                    statusColor = '#fbbf24'; // Warning color
+                }
+
+                const probDisplay = isFiltered ? "FILTERED" : `${bet.probabilityOver25}%`;
+                const fairOddDisplay = isFiltered ? "--" : bet.fairOddOver25.toFixed(2);
+
+                card.innerHTML = `
+                <button class="remove-bet" onclick="removeFromCart(${index})">×</button>
+                <div class="bet-card-header" style="color: ${isValue && !isFiltered ? '#ffffff' : '#e2e8f0'}">
+                    ${bet.homeTeam} x ${bet.awayTeam}
+                </div>
+                <div class="bet-card-stats">
+                    <div>Prob. Over 2.5: <span style="color:white">${probDisplay}</span></div>
+                    <div>Fair Odd: <span style="color:white">${fairOddDisplay}</span></div>
+                    <div>Market Odd: <span style="color:white">${bet.marketOdd}</span></div>
+                    <div style="margin-top:8px; font-weight:bold; color:${statusColor}">
+                        ${statusText}
+                    </div>
+                </div>
+            `;
+                grid.appendChild(card);
+            });
+
+            // Scroll to cart if adding first item
+            if (savedBets.length === 1) {
+                section.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    </script>
+
+</body>
+
+</html>
