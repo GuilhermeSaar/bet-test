@@ -6,6 +6,42 @@ import java.util.List;
 
 public class Calculations {
 
+    public static double finalProbability(double probabilityPoisson, double homeStatsOverPercent,
+            double awayStatsOverPercent) {
+
+        // Peso dinâmico
+        double weightPoisson;
+        double weightHistory;
+
+        if (homeStatsOverPercent >= 0.60 && awayStatsOverPercent >= 0.60) {
+            weightHistory = 0.65;
+            weightPoisson = 0.35;
+        } else {
+            weightHistory = 0.50;
+            weightPoisson = 0.50;
+        }
+
+        double avgHistoricalOver = (homeStatsOverPercent + awayStatsOverPercent) / 2.0;
+        double finalProbability = probabilityPoisson * weightPoisson + avgHistoricalOver * weightHistory;
+        return Math.max(finalProbability, 0.01);
+    }
+
+    public static boolean isRiskyMatch(double expectedGoals, double homeOverPercent, double awayOverPercent) {
+        return expectedGoals < 2.50 ||
+                homeOverPercent < 0.50 ||
+                awayOverPercent < 0.50;
+    }
+
+    // Calcula o Expected Goals usando média geométrica (Ataque x Defesa).
+    public static double expectedTotalGoals(double avgScored, double avgConceded) {
+        // Garante valores mínimos para evitar zero
+        double safeScored = Math.max(avgScored, 0.1);
+        double safeConceded = Math.max(avgConceded, 0.1);
+
+        // Média geométrica com redutor conservador leve (0.95)
+        double expected = Math.sqrt(safeScored * safeConceded) * 0.95;
+        return Calculations.round(expected, 2);
+    }
 
     // pega os placares de um time, calcula médias de gols feitos, sofridos e a
     // porcentagem de jogos com mais de 2.5 gols
@@ -45,7 +81,6 @@ public class Calculations {
         double overPercent = (double) overCount / matches.size();
 
         return new TeamStats(round(avgScored, 2), round(avgConceded, 2), overPercent);
-
     }
 
     public static double round(double value, int places) {
@@ -55,16 +90,6 @@ public class Calculations {
         value = value * factor;
         long tmp = Math.round(value);
         return (double) tmp / factor;
-    }
-
-    // Poisson Probability for matches with 0, 1, 2 goals. Over 2.5 = 1 - (Prob(0) +
-    // Prob(1) + Prob(2))
-    public static double calculatePoissonOver25(double lambda) {
-
-        double p0 = Math.exp(-lambda); // k=0
-        double p1 = Math.exp(-lambda) * lambda; // k=1
-        double p2 = Math.exp(-lambda) * Math.pow(lambda, 2) / 2.0; // k=2
-        return 1.0 - (p0 + p1 + p2);
     }
 
 }

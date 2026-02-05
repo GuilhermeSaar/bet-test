@@ -250,6 +250,59 @@
             align-items: center;
         }
 
+        /* New Advanced Markets Section */
+        .adv-markets {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .market-box {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .market-title {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .probs-1x2 {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .prob-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .prob-val {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .prob-lbl {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .btts-val {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
         /* Selected Bets Cart */
         .cart-section {
             border-top: 1px solid var(--border-color);
@@ -319,8 +372,8 @@
 
     <div class="container">
         <div class="header">
-            <h1>Over 2.5 Scanner</h1>
-            <p style="color: #94a3b8;">Enter scores for last 5 games (GP = Gols Pró, GS = Gols Sofridos).</p>
+            <h1>Scanner Over 2.5</h1>
+            <p style="color: #94a3b8;">Insira os placares dos últimos 5 jogos.</p>
         </div>
 
         <!-- Input Form -->
@@ -329,11 +382,11 @@
                 <!-- Home Team -->
                 <div>
                     <div class="form-group">
-                        <label>Home Team Name</label>
-                        <input type="text" id="homeTeam" placeholder="e.g. Arsenal">
+                        <label>Time da Casa (Mandante)</label>
+                        <input type="text" id="homeTeam" placeholder="ex: Flamengo">
                     </div>
                     <div class="form-group">
-                        <label>Last 5 Matches</label>
+                        <label>Últimos 5 Jogos</label>
                         <div class="column-labels">
                             <div class="col-label" title="Gols Pró">GP</div>
                             <div class="col-label" style="opacity:0">-</div> <!-- Spacer -->
@@ -362,11 +415,11 @@
                 <!-- Away Team -->
                 <div>
                     <div class="form-group">
-                        <label>Away Team Name</label>
-                        <input type="text" id="awayTeam" placeholder="e.g. Chelsea">
+                        <label>Time Visitante</label>
+                        <input type="text" id="awayTeam" placeholder="ex: Palmeiras">
                     </div>
                     <div class="form-group">
-                        <label>Last 5 Matches</label>
+                        <label>Últimos 5 Jogos</label>
                         <div class="column-labels">
                             <div class="col-label" title="Gols Pró">GP</div>
                             <div class="col-label" style="opacity:0">-</div>
@@ -394,24 +447,24 @@
             </div>
 
             <div class="form-group" style="margin-top: 20px;">
-                <label>Market Odd (Over 2.5)</label>
-                <input type="number" step="0.01" id="marketOdd" placeholder="e.g. 1.85" style="max-width: 200px;">
+                <label>Odd de Mercado (Over 2.5)</label>
+                <input type="number" step="0.01" id="marketOdd" placeholder="ex: 1.85" style="max-width: 200px;">
             </div>
 
-            <button class="analyze-btn" onclick="analyzeMatch()">Analyze Match</button>
+            <button class="analyze-btn" onclick="analyzeMatch()">Analisar Partida</button>
         </div>
 
         <!-- Results Container -->
         <div id="results" class="card">
             <div class="result-header">
                 <div>
-                    <h2 style="margin: 0; font-size: 1.5rem;">Analysis Result</h2>
+                    <h2 style="margin: 0; font-size: 1.5rem;">Resultado da Análise</h2>
                     <div style="font-size: 0.9rem; color: #94a3b8; margin-top: 4px;">
-                        Value Bet: <span id="valueBetBadge" class="badge">Checking...</span>
+                        Valor: <span id="valueBetBadge" class="badge">Verificando...</span>
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <div style="font-size: 0.9rem; color: #94a3b8;">Confidence</div>
+                    <div style="font-size: 0.9rem; color: #94a3b8;">Confiança</div>
                     <div id="confidenceLevel" style="font-weight: bold; color: var(--text-color);">--</div>
                 </div>
             </div>
@@ -419,49 +472,87 @@
             <div class="stats-grid">
                 <div class="stat-box">
                     <div class="stat-value" id="totalxG">0.00</div>
-                    <div class="stat-label">Total Goal Expectation</div>
+                    <div class="stat-label">Exp. Total de Gols</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-value" id="probOver">0%</div>
-                    <div class="stat-label">Probability Over 2.5</div>
+                    <div class="stat-label">Prob. Over 2.5</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-value" id="fairOdd">0.00</div>
-                    <div class="stat-label">Fair Odd</div>
+                    <div class="stat-label">Odd Justa</div>
                 </div>
             </div>
 
             <div class="prob-section">
                 <div style="text-align: center; flex: 1;">
                     <div style="font-size: 1.2rem; font-weight: bold;" id="homeStats">0.0 / 0.0</div>
-                    <div style="font-size: 0.8rem; color: #94a3b8;">Home xG (Scored/Conceded)</div>
+                    <div style="font-size: 0.8rem; color: #94a3b8;">Casa xG (Feitos/Sofridos)</div>
                 </div>
                 <div
                     style="text-align: center; flex: 1; border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);">
                     <div style="font-size: 1.2rem; font-weight: bold;" id="awayStats">0.0 / 0.0</div>
-                    <div style="font-size: 0.8rem; color: #94a3b8;">Away xG (Scored/Conceded)</div>
+                    <div style="font-size: 0.8rem; color: #94a3b8;">Vis. xG (Feitos/Sofridos)</div>
                 </div>
                 <div style="text-align: center; flex: 1;">
                     <div style="font-size: 1.2rem; font-weight: bold; color: var(--accent-color);" id="edge">0%</div>
-                    <div style="font-size: 0.8rem; color: #94a3b8;">Estimated Edge</div>
+                    <div style="font-size: 0.8rem; color: #94a3b8;">Margem Estimada</div>
+                </div>
+            </div>
+
+            <!-- Advanced Markets (Team Goals) -->
+            <div class="adv-markets">
+                <!-- Home Team Goals -->
+                <div class="market-box">
+                    <div class="market-title" id="lblHomeName">Gols Mandante</div>
+                    <div class="probs-1x2">
+                        <div class="prob-item">
+                            <div class="prob-val" id="homeOver05">0%</div>
+                            <div class="prob-lbl">+ 0.5</div>
+                        </div>
+                        <div class="prob-item" style="border-left: 1px solid rgba(255,255,255,0.1);">
+                            <div class="prob-val" id="homeOver15">0%</div>
+                            <div class="prob-lbl">+ 1.5</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Away Team Goals -->
+                <div class="market-box">
+                    <div class="market-title" id="lblAwayName">Gols Visitante</div>
+                    <div class="probs-1x2">
+                        <div class="prob-item">
+                            <div class="prob-val" id="awayOver05">0%</div>
+                            <div class="prob-lbl">+ 0.5</div>
+                        </div>
+                        <div class="prob-item" style="border-left: 1px solid rgba(255,255,255,0.1);">
+                            <div class="prob-val" id="awayOver15">0%</div>
+                            <div class="prob-lbl">+ 1.5</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BTTS -->
+                <div class="market-box" style="grid-column: 1 / -1; margin-top: 10px;">
+                    <div class="market-title">Ambos Marcam (Sim)</div>
+                    <div class="btts-val" id="probBTTS" style="font-size: 1.5rem; color: var(--accent-color);">0%</div>
                 </div>
             </div>
 
             <!-- Add to Cart Button -->
-            <button class="secondary-btn" onclick="addToCart()">+ Add this analysis to my list</button>
+            <button class="secondary-btn" onclick="addToCart()">+ Adicionar à minha lista</button>
         </div>
 
         <!-- Selected Bets Cart -->
         <div class="cart-section" id="cartSection" style="display: none;">
             <div class="cart-header">
-                <span>📋 Selected Bets</span>
-                <span style="font-size: 0.9rem; color: #64748b; font-weight: normal;">(Locally saved)</span>
+                <span>📋 Apostas Selecionadas</span>
+                <span style="font-size: 0.9rem; color: #64748b; font-weight: normal;">(Salvo localmente)</span>
             </div>
             <div class="cart-grid" id="cartGrid">
                 <!-- Cards will be injected here -->
             </div>
         </div>
-
     </div>
 
     <script>
@@ -486,8 +577,8 @@
 
         async function analyzeMatch() {
             // 1. Gather Data & Concatenate
-            const homeTeam = document.getElementById('homeTeam').value || "Home";
-            const awayTeam = document.getElementById('awayTeam').value || "Away";
+            const homeTeam = document.getElementById('homeTeam').value || "Casa";
+            const awayTeam = document.getElementById('awayTeam').value || "Fora";
             const marketOdd = parseFloat(document.getElementById('marketOdd').value);
 
             // Helper to collect scores
@@ -508,7 +599,7 @@
             const awayScores = getScores('away');
 
             if (homeScores.length === 0 || awayScores.length === 0 || !marketOdd) {
-                alert("Please fill in match scores and market odd.");
+                alert("Por favor preencha os placares e a odd.");
                 return;
             }
 
@@ -521,7 +612,7 @@
             };
 
             const btn = document.querySelector('.analyze-btn');
-            btn.innerHTML = "Analyzing...";
+            btn.innerHTML = "Analisando...";
             btn.classList.add('loading');
 
             try {
@@ -534,7 +625,7 @@
                     body: JSON.stringify(payload)
                 });
 
-                if (!response.ok) throw new Error("API Request Failed");
+                if (!response.ok) throw new Error("Falha na requisição API");
 
                 const data = await response.json();
 
@@ -547,9 +638,9 @@
 
             } catch (error) {
                 console.error(error);
-                alert("Error analyzing match. Ensure server is running.");
+                alert("Erro ao analisar. Verifique se o servidor está rodando.");
             } finally {
-                btn.innerHTML = "Analyze Match";
+                btn.innerHTML = "Analisar Partida";
                 btn.classList.remove('loading');
             }
         }
@@ -598,10 +689,10 @@
             fairOddElem.textContent = data.fairOddOver25.toFixed(2);
 
             if (data.valueBet) {
-                badge.textContent = "YES - VALUE BET";
+                badge.textContent = "SIM - APOSTA DE VALOR";
                 badge.className = "badge badge-success";
             } else {
-                badge.textContent = "NO VALUE";
+                badge.textContent = "SEM VALOR";
                 badge.className = "badge badge-danger";
             }
 
@@ -618,17 +709,30 @@
                 ? "var(--accent-color)"
                 : "var(--danger-color)";
 
+            // Update New Metrics - Team Goals
+            document.getElementById('lblHomeName').textContent = "Gols " + (data.homeTeam || "Casa");
+            document.getElementById('lblAwayName').textContent = "Gols " + (data.awayTeam || "Visitante");
+
+            document.getElementById('homeOver05').textContent = data.homeProbOver05 + "%";
+            document.getElementById('homeOver15').textContent = data.homeProbOver15 + "%";
+
+            document.getElementById('awayOver05').textContent = data.awayProbOver05 + "%";
+            document.getElementById('awayOver15').textContent = data.awayProbOver15 + "%";
+
+            // Restore BTTS
+            document.getElementById('probBTTS').textContent = data.probabilityBTTS + "%";
+
             document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Cart Functions
+        // Funções do Carrinho
         function addToCart() {
             if (!currentAnalysis) return;
 
             // Prevent duplicates
             const exists = savedBets.some(b => b.homeTeam === currentAnalysis.homeTeam && b.awayTeam === currentAnalysis.awayTeam);
             if (exists) {
-                alert("This match is already in your list.");
+                alert("Essa partida já está na lista.");
                 return;
             }
 
@@ -683,12 +787,12 @@
                 const isFiltered = bet.probabilityOver25 === 0;
 
                 const isValue = bet.valueBet;
-                let statusText = isValue ? 'VALUE BET ✅' : 'NO VALUE';
+                let statusText = isValue ? 'VALOR ✅' : 'SEM VALOR';
                 let statusColor = isValue ? 'var(--accent-color)' : '#94a3b8';
 
                 // Override for filtered/no-bet scenario
                 if (isFiltered) {
-                    statusText = 'NO BET (Filtered)';
+                    statusText = 'NO BET (Filtrado)';
                     statusColor = '#fbbf24'; // Warning color
                 }
 

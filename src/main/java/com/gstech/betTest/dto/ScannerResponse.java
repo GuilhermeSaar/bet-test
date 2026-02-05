@@ -22,7 +22,17 @@ public class ScannerResponse {
     private boolean isValueBet;
     private String confidenceLevel; // LOW, MEDIUM, HIGH
 
-    public ScannerResponse(double homeAvgScored, double homeAvgConceded, double awayAvgScored, double awayAvgConceded, double homeOverPercent, double awayOverPercent, double expectedTotalGoals, double probabilityOver25, double fairOddOver25, double marketOdd, boolean isValueBet, String confidenceLevel) {
+    // New Markets - Team Goals
+    private double probabilityBTTS;
+    private double homeProbOver05;
+    private double homeProbOver15;
+    private double awayProbOver05;
+    private double awayProbOver15;
+
+    public ScannerResponse(double homeAvgScored, double homeAvgConceded, double awayAvgScored, double awayAvgConceded,
+            double homeOverPercent, double awayOverPercent, double expectedTotalGoals, double probabilityOver25,
+            double fairOddOver25, double marketOdd, boolean isValueBet, String confidenceLevel, double probabilityBTTS,
+            double homeProbOver05, double homeProbOver15, double awayProbOver05, double awayProbOver15) {
         this.homeAvgScored = homeAvgScored;
         this.homeAvgConceded = homeAvgConceded;
         this.awayAvgScored = awayAvgScored;
@@ -35,6 +45,11 @@ public class ScannerResponse {
         this.marketOdd = marketOdd;
         this.isValueBet = isValueBet;
         this.confidenceLevel = confidenceLevel;
+        this.probabilityBTTS = probabilityBTTS;
+        this.homeProbOver05 = homeProbOver05;
+        this.homeProbOver15 = homeProbOver15;
+        this.awayProbOver05 = awayProbOver05;
+        this.awayProbOver15 = awayProbOver15;
     }
 
     public double getHomeAvgScored() {
@@ -131,5 +146,45 @@ public class ScannerResponse {
 
     public void setConfidenceLevel(String confidenceLevel) {
         this.confidenceLevel = confidenceLevel;
+    }
+
+    public double getProbabilityBTTS() {
+        return probabilityBTTS;
+    }
+
+    public void setProbabilityBTTS(double probabilityBTTS) {
+        this.probabilityBTTS = probabilityBTTS;
+    }
+
+    public double getHomeProbOver05() {
+        return homeProbOver05;
+    }
+
+    public void setHomeProbOver05(double homeProbOver05) {
+        this.homeProbOver05 = homeProbOver05;
+    }
+
+    public double getHomeProbOver15() {
+        return homeProbOver15;
+    }
+
+    public void setHomeProbOver15(double homeProbOver15) {
+        this.homeProbOver15 = homeProbOver15;
+    }
+
+    public double getAwayProbOver05() {
+        return awayProbOver05;
+    }
+
+    public void setAwayProbOver05(double awayProbOver05) {
+        this.awayProbOver05 = awayProbOver05;
+    }
+
+    public double getAwayProbOver15() {
+        return awayProbOver15;
+    }
+
+    public void setAwayProbOver15(double awayProbOver15) {
+        this.awayProbOver15 = awayProbOver15;
     }
 }

@@ -6,66 +6,67 @@ import com.gstech.betTest.model.TeamStats;
 import com.gstech.betTest.utils.Calculations;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class ScannerService {
 
+    private final ProbabilityService probabilityService;
+
+    public ScannerService(ProbabilityService probabilityService) {
+        this.probabilityService = probabilityService;
+    }
+
     public ScannerResponse analyzeMatch(ScannerRequest request) {
 
-        // estatistica de time casa
+        // estatistica de time casa e visitante
         TeamStats homeStats = Calculations.calculateStats(request.getHomeLastMatches());
-
-        // estatistica de time visitante
         TeamStats awayStats = Calculations.calculateStats(request.getAwayLastMatches());
 
-        // calculo expected total goals
-        double xGHome = (homeStats.avgScored() + awayStats.avgConceded()) / 2.0; // ex: (1.8 + 1.3) / 2 = 1.55
-        double xGAway = (awayStats.avgScored() + homeStats.avgConceded()) / 2.0; // ex: (1.5 + 1.2) / 2 = 1.35
-        double expectedTotalGoals = xGHome + xGAway; // ex: 1.55 + 1.35 = 2.9
-        double expectedGoalsForResponse = Calculations.round(expectedTotalGoals, 2);
+        // calculo expected goals individuais (Cruzamento: Ataque x Defesa adversaria)
+        // Usando média geométrica: sqrt(ataque * defesa_adversaria)
+        double homeExpectedGoals = Calculations.expectedTotalGoals(homeStats.avgScored(), awayStats.avgConceded());
+        double awayExpectedGoals = Calculations.expectedTotalGoals(awayStats.avgScored(), homeStats.avgConceded());
 
-        // filtro para verificar se a aposta é de valor ou não
-        boolean isRiskyMatch = expectedTotalGoals < 2.6 ||
-                homeStats.overPercent() < 0.50 ||
-                awayStats.overPercent() < 0.45;
+        // Total esperado (para registro e compatibilidade)
+        double totalExpectedGoals = homeExpectedGoals + awayExpectedGoals;
 
-        // calcular probabilidade de over 2.5 gols
-        // metodo poisson - baseado na media de gols esperados
-        double adjustedLambda = expectedTotalGoals * 0.85; // ajuste para evitar superestimação
-        double probabilityPoisson = Calculations.calculatePoissonOver25(adjustedLambda); // ex: 0.72
+        // 1. Gerar distribuições de Poisson (0-10 gols)
+        double[] homeProbs = probabilityService.calculateGoalProbabilities(homeExpectedGoals);
+        double[] awayProbs = probabilityService.calculateGoalProbabilities(awayExpectedGoals);
 
-        // Historical
-        double avgHistoricalOver = (homeStats.overPercent() + awayStats.overPercent()) / 2.0; // ex: (0.6 + 0.5) / 2 = 0.55
+        // 2. Criar Matriz de Placares
+        double[][] scoreMatrix = probabilityService.generateScoreMatrix(homeProbs, awayProbs);
 
-        // Peso dinâmico
-        double weightPoisson;
-        double weightHistory;
+        // 3. Calcular Probabilidades de Mercado (Over2.5, BTTS)
+        java.util.Map<String, Double> markets = probabilityService.calculateMarketProbabilities(scoreMatrix);
+        double probOver25Poisson = markets.get("Over2.5");
 
-        if (homeStats.overPercent() >= 0.60 && awayStats.overPercent() >= 0.60) {
-            weightHistory = 0.65;
-            weightPoisson = 0.35;
-        } else {
-            weightHistory = 0.50;
-            weightPoisson = 0.50;
-        }
+        // Probabilidade de gols individuais (derivado do Poisson array)
+        // homeProbs[0] = chance de 0 gols. Over 0.5 = 1 - probs[0]
+        double homeOver05 = 1.0 - homeProbs[0];
+        double homeOver15 = 1.0 - (homeProbs[0] + homeProbs[1]);
 
-        // Probabilidade Combinada (peso de 50% para cada - heurística simples)
-        double finalProbability = probabilityPoisson * weightPoisson + avgHistoricalOver * weightHistory; // ex: 0.72 * 0.5 + 0.55 * 0.5 = 0.635
-        finalProbability = Math.max(finalProbability, 0.01); // evitar zero
+        double awayOver05 = 1.0 - awayProbs[0];
+        double awayOver15 = 1.0 - (awayProbs[0] + awayProbs[1]);
+
+        // Probabilidade Combinada (Over 2.5 Geral)
+        double resultFinalProbability = Calculations.finalProbability(probOver25Poisson, homeStats.overPercent(),
+                awayStats.overPercent());
 
         // definir a resposta
-        double finalProbabilityForResponse = Calculations.round(finalProbability * 100, 1);
+        double finalProbabilityForResponse = Calculations.round(resultFinalProbability * 100, 1);
 
         // calcular odd justa
-        double fairOdd = 1.0 / finalProbability;
-        if (finalProbability == 0)
+        double fairOdd = 1.0 / resultFinalProbability;
+        if (resultFinalProbability == 0)
             fairOdd = 99.0; // evitar infinito
         double fairOddForResponse = Calculations.round(fairOdd, 2);
 
         // checar valor de aposta
         double marketOdd = request.getMarketOddOver25();
 
+        // filtro para verificar se a aposta é de valor ou não
+        boolean isRiskyMatch = Calculations.isRiskyMatch(totalExpectedGoals, homeStats.overPercent(),
+                awayStats.overPercent());
         // considerar uma aposta de valor apenas se nao for uma partida arriscada
         boolean isValue = !isRiskyMatch && (request.getMarketOddOver25() > fairOdd); // ex: 2.10 > 1.57
 
@@ -79,12 +80,16 @@ public class ScannerService {
                 awayStats.avgConceded(),
                 homeStats.overPercent(),
                 awayStats.overPercent(),
-                expectedGoalsForResponse,
+                totalExpectedGoals,
                 finalProbabilityForResponse,
                 fairOddForResponse,
                 marketOdd,
                 isValue,
-                isValue ? (edge > 0.15 ? "Alta" : edge > 0.05 ? "Média" : "Baixa") : "Mínima"
-        );
+                isValue ? (edge > 0.15 ? "Alta" : edge > 0.05 ? "Média" : "Baixa") : "Mínima",
+                Calculations.round(markets.get("BTTS") * 100, 1),
+                Calculations.round(homeOver05 * 100, 1),
+                Calculations.round(homeOver15 * 100, 1),
+                Calculations.round(awayOver05 * 100, 1),
+                Calculations.round(awayOver15 * 100, 1));
     }
 }
