@@ -8,7 +8,7 @@ public class ScannerRequest {
     private String awayTeam;
     private List<String> homeLastMatches;
     private List<String> awayLastMatches;
-    private Double marketOddOver25;
+    private Double marketOddOver15;
 
     // Getters and Setters
     public String getHomeTeam() {
@@ -43,11 +43,11 @@ public class ScannerRequest {
         this.awayLastMatches = awayLastMatches;
     }
 
-    public Double getMarketOddOver25() {
-        return marketOddOver25;
+    public Double getMarketOddOver15() {
+        return marketOddOver15;
     }
 
-    public void setMarketOddOver25(Double marketOddOver25) {
-        this.marketOddOver25 = marketOddOver25;
+    public void setMarketOddOver15(Double marketOddOver15) {
+        this.marketOddOver15 = marketOddOver15;
     }
 }

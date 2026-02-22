@@ -10,9 +10,48 @@ import org.springframework.stereotype.Service;
 public class ScannerService {
 
     private final ProbabilityService probabilityService;
+    private final com.gstech.betTest.repository.SavedBetRepository savedBetRepository;
 
-    public ScannerService(ProbabilityService probabilityService) {
+    public ScannerService(ProbabilityService probabilityService,
+            com.gstech.betTest.repository.SavedBetRepository savedBetRepository) {
         this.probabilityService = probabilityService;
+        this.savedBetRepository = savedBetRepository;
+    }
+
+    public com.gstech.betTest.model.SavedBet saveBet(com.gstech.betTest.model.SavedBet bet) {
+        return savedBetRepository.save(bet);
+    }
+
+    public java.util.List<com.gstech.betTest.model.SavedBet> getAllSavedBets() {
+        return savedBetRepository.findAll();
+    }
+
+    public void deleteBet(Long id) {
+        savedBetRepository.deleteById(id);
+    }
+
+    public com.gstech.betTest.model.SavedBet updateMatchResult(Long id, String finalScore) {
+        com.gstech.betTest.model.SavedBet bet = savedBetRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Aposta não encontrada"));
+
+        bet.setFinalScore(finalScore);
+
+        try {
+            // Parse score "2-1"
+            String[] goals = finalScore.split("-");
+            int total = Integer.parseInt(goals[0].trim()) + Integer.parseInt(goals[1].trim());
+
+            // Regra Over 1.5 — WIN com 2 ou mais gols no total
+            if (total > 1) {
+                bet.setResultOutcome("WIN");
+            } else {
+                bet.setResultOutcome("LOSS");
+            }
+        } catch (Exception e) {
+            bet.setResultOutcome("ERRO");
+        }
+
+        return savedBetRepository.save(bet);
     }
 
     public ScannerResponse analyzeMatch(ScannerRequest request) {
@@ -36,9 +75,9 @@ public class ScannerService {
         // 2. Criar Matriz de Placares
         double[][] scoreMatrix = probabilityService.generateScoreMatrix(homeProbs, awayProbs);
 
-        // 3. Calcular Probabilidades de Mercado (Over2.5, BTTS)
+        // 3. Calcular Probabilidades de Mercado (Over1.5, BTTS)
         java.util.Map<String, Double> markets = probabilityService.calculateMarketProbabilities(scoreMatrix);
-        double probOver25Poisson = markets.get("Over2.5");
+        double probOver15Poisson = markets.get("Over1.5");
 
         // Probabilidade de gols individuais (derivado do Poisson array)
         // homeProbs[0] = chance de 0 gols. Over 0.5 = 1 - probs[0]
@@ -48,8 +87,8 @@ public class ScannerService {
         double awayOver05 = 1.0 - awayProbs[0];
         double awayOver15 = 1.0 - (awayProbs[0] + awayProbs[1]);
 
-        // Probabilidade Combinada (Over 2.5 Geral)
-        double resultFinalProbability = Calculations.finalProbability(probOver25Poisson, homeStats.overPercent(),
+        // Probabilidade Combinada (Over 1.5 Geral)
+        double resultFinalProbability = Calculations.finalProbability(probOver15Poisson, homeStats.overPercent(),
                 awayStats.overPercent());
 
         // definir a resposta
@@ -62,16 +101,16 @@ public class ScannerService {
         double fairOddForResponse = Calculations.round(fairOdd, 2);
 
         // checar valor de aposta
-        double marketOdd = request.getMarketOddOver25();
+        double marketOdd = request.getMarketOddOver15();
 
         // filtro para verificar se a aposta é de valor ou não
         boolean isRiskyMatch = Calculations.isRiskyMatch(totalExpectedGoals, homeStats.overPercent(),
                 awayStats.overPercent());
         // considerar uma aposta de valor apenas se nao for uma partida arriscada
-        boolean isValue = !isRiskyMatch && (request.getMarketOddOver25() > fairOdd); // ex: 2.10 > 1.57
+        boolean isValue = !isRiskyMatch && (request.getMarketOddOver15() > fairOdd); // ex: 1.60 > 1.30
 
         // nivel de confiança baseado na margem de valor
-        double edge = (request.getMarketOddOver25() - fairOdd) / fairOdd;
+        double edge = (request.getMarketOddOver15() - fairOdd) / fairOdd;
 
         return new ScannerResponse(
                 homeStats.avgScored(),

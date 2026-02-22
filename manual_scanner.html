@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Over 2.5 Goals Scanner</title>
+    <title>Over 1.5 Goals Scanner</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -45,6 +45,7 @@
             margin: 0;
             background: linear-gradient(to right, #60a5fa, #34d399);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -125,6 +126,7 @@
             font-size: 1.1rem !important;
             /* Hide Spinners */
             -moz-appearance: textfield;
+            appearance: textfield;
         }
 
         .score-input::-webkit-outer-spin-button,
@@ -372,8 +374,11 @@
 
     <div class="container">
         <div class="header">
-            <h1>Scanner Over 2.5</h1>
+            <h1>Scanner Over 1.5</h1>
             <p style="color: #94a3b8;">Insira os placares dos últimos 5 jogos.</p>
+            <a href="dashboard.html"
+                style="display: inline-block; margin-top: 10px; color: var(--primary-color); text-decoration: none; font-weight: 600;">📊
+                Ir para o Dashboard</a>
         </div>
 
         <!-- Input Form -->
@@ -447,7 +452,7 @@
             </div>
 
             <div class="form-group" style="margin-top: 20px;">
-                <label>Odd de Mercado (Over 2.5)</label>
+                <label>Odd de Mercado (Over 1.5)</label>
                 <input type="number" step="0.01" id="marketOdd" placeholder="ex: 1.85" style="max-width: 200px;">
             </div>
 
@@ -476,7 +481,7 @@
                 </div>
                 <div class="stat-box">
                     <div class="stat-value" id="probOver">0%</div>
-                    <div class="stat-label">Prob. Over 2.5</div>
+                    <div class="stat-label">Prob. Over 1.5</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-value" id="fairOdd">0.00</div>
@@ -608,7 +613,7 @@
                 awayTeam: awayTeam,
                 homeLastMatches: homeScores,
                 awayLastMatches: awayScores,
-                marketOddOver25: marketOdd
+                marketOddOver15: marketOdd
             };
 
             const btn = document.querySelector('.analyze-btn');
@@ -671,7 +676,7 @@
                 `${data.awayAvgScored} / ${data.awayAvgConceded}`;
 
             // 🚫 FILTERED GAME
-            if (data.probabilityOver25 === 0) {
+            if (data.probabilityOver15 === 0) {
                 probElem.textContent = "FILTERED";
                 fairOddElem.textContent = "--";
                 edgeElem.textContent = "--";
@@ -685,8 +690,8 @@
             }
 
             // ✅ NORMAL FLOW
-            probElem.textContent = data.probabilityOver25 + "%";
-            fairOddElem.textContent = data.fairOddOver25.toFixed(2);
+            probElem.textContent = data.probabilityOver15 + "%";
+            fairOddElem.textContent = data.fairOddOver15.toFixed(2);
 
             if (data.valueBet) {
                 badge.textContent = "SIM - APOSTA DE VALOR";
@@ -698,9 +703,9 @@
 
             // Edge calculation (safe)
             let edgeText = "--";
-            if (data.fairOddOver25 > 0) {
+            if (data.fairOddOver15 > 0) {
                 const edge =
-                    ((data.marketOdd - data.fairOddOver25) / data.fairOddOver25 * 100).toFixed(1);
+                    ((data.marketOdd - data.fairOddOver15) / data.fairOddOver15 * 100).toFixed(1);
                 edgeText = (data.valueBet ? "+" : "") + edge + "%";
             }
 
@@ -784,7 +789,7 @@
                 card.className = 'bet-card';
 
                 // Check for 'filtered' state (prob == 0) matching renderResults logic
-                const isFiltered = bet.probabilityOver25 === 0;
+                const isFiltered = bet.probabilityOver15 === 0;
 
                 const isValue = bet.valueBet;
                 let statusText = isValue ? 'VALOR ✅' : 'SEM VALOR';
@@ -796,8 +801,8 @@
                     statusColor = '#fbbf24'; // Warning color
                 }
 
-                const probDisplay = isFiltered ? "FILTERED" : `${bet.probabilityOver25}%`;
-                const fairOddDisplay = isFiltered ? "--" : bet.fairOddOver25.toFixed(2);
+                const probDisplay = isFiltered ? "FILTERED" : `${bet.probabilityOver15}%`;
+                const fairOddDisplay = isFiltered ? "--" : bet.fairOddOver15.toFixed(2);
 
                 card.innerHTML = `
                 <button class="remove-bet" onclick="removeFromCart(${index})">×</button>
@@ -805,13 +810,16 @@
                     ${bet.homeTeam} x ${bet.awayTeam}
                 </div>
                 <div class="bet-card-stats">
-                    <div>Prob. Over 2.5: <span style="color:white">${probDisplay}</span></div>
+                    <div>Prob. Over 1.5: <span style="color:white">${probDisplay}</span></div>
                     <div>Fair Odd: <span style="color:white">${fairOddDisplay}</span></div>
                     <div>Market Odd: <span style="color:white">${bet.marketOdd}</span></div>
                     <div style="margin-top:8px; font-weight:bold; color:${statusColor}">
                         ${statusText}
                     </div>
                 </div>
+                <button class="secondary-btn" id="save-btn-${index}" onclick="saveBetToDatabase(${index})" style="margin-top: 12px; font-size: 0.85rem; padding: 8px;">
+                    💾 Salvar no Banco
+                </button>
             `;
                 grid.appendChild(card);
             });
@@ -819,6 +827,52 @@
             // Scroll to cart if adding first item
             if (savedBets.length === 1) {
                 section.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        async function saveBetToDatabase(index) {
+            const bet = savedBets[index];
+            const btn = document.getElementById(`save-btn-${index}`);
+
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "Salvando...";
+            btn.disabled = true;
+
+            const payload = {
+                homeTeam: bet.homeTeam,
+                awayTeam: bet.awayTeam,
+                probabilityOver15: bet.probabilityOver15,
+                fairOddOver15: bet.fairOddOver15,
+                marketOdd: bet.marketOdd,
+                homeAvgScored: bet.homeAvgScored,
+                homeAvgConceded: bet.homeAvgConceded,
+                awayAvgScored: bet.awayAvgScored,
+                awayAvgConceded: bet.awayAvgConceded,
+                isValueBet: bet.valueBet,
+                confidenceLevel: bet.confidenceLevel
+            };
+
+            try {
+                const response = await fetch('http://localhost:8080/api/scanner/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("Erro ao salvar no banco");
+
+                btn.innerHTML = "✅ Salvo!";
+                btn.style.backgroundColor = "rgba(16, 185, 129, 0.2)";
+                btn.style.borderColor = "var(--accent-color)";
+                btn.style.color = "var(--accent-color)";
+
+            } catch (error) {
+                console.error(error);
+                alert("Erro ao salvar a aposta no banco de dados.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
     </script>

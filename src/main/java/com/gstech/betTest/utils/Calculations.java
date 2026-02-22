@@ -21,14 +21,14 @@ public class Calculations {
             weightPoisson = 0.50;
         }
 
-        double avgHistoricalOver = (homeStatsOverPercent + awayStatsOverPercent) / 2.0;
+        double avgHistoricalOver = (homeStatsOverPercent + awayStatsOverPercent) / 2.0; // ex: 0.55 + 0.50 / 2 = 0.525
         double finalProbability = probabilityPoisson * weightPoisson + avgHistoricalOver * weightHistory;
         return Math.max(finalProbability, 0.01);
     }
 
     public static boolean isRiskyMatch(double expectedGoals, double homeOverPercent, double awayOverPercent) {
-        return expectedGoals < 2.50 ||
-                homeOverPercent < 0.50 ||
+        return expectedGoals < 1.50 ||
+                homeOverPercent < 0.55 ||
                 awayOverPercent < 0.50;
     }
 
@@ -67,7 +67,7 @@ public class Calculations {
                 totalScored += scored;
                 totalConceded += conceded;
 
-                if ((scored + conceded) > 2.5) {
+                if ((scored + conceded) > 1) {
                     overCount++;
                 }
 

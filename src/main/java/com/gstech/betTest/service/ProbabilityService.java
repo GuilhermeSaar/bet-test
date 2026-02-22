@@ -66,6 +66,7 @@ public class ProbabilityService {
      *         AwayWin.
      */
     public Map<String, Double> calculateMarketProbabilities(double[][] scoreMatrix) {
+        double probOver15 = 0.0;
         double probOver25 = 0.0;
         double probBTTS = 0.0;
         double probHomeWin = 0.0;
@@ -75,6 +76,11 @@ public class ProbabilityService {
         for (int i = 0; i < scoreMatrix.length; i++) {
             for (int j = 0; j < scoreMatrix[i].length; j++) {
                 double probScore = scoreMatrix[i][j];
+
+                // Over 1.5 (Soma de gols > 1, ou seja 2+ gols)
+                if ((i + j) > 1) {
+                    probOver15 += probScore;
+                }
 
                 // Over 2.5 (Soma de gols > 2.5)
                 if ((i + j) > 2.5) {
@@ -98,6 +104,7 @@ public class ProbabilityService {
         }
 
         Map<String, Double> markets = new HashMap<>();
+        markets.put("Over1.5", probOver15);
         markets.put("Over2.5", probOver25);
         markets.put("BTTS", probBTTS);
         markets.put("HomeWin", probHomeWin);

@@ -20,4 +20,27 @@ public class ScannerController {
         ScannerResponse response = scannerService.analyzeMatch(request);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/save")
+    public ResponseEntity<com.gstech.betTest.model.SavedBet> saveBet(@RequestBody com.gstech.betTest.model.SavedBet bet) {
+        com.gstech.betTest.model.SavedBet saved = scannerService.saveBet(bet);
+        return ResponseEntity.ok(saved);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<java.util.List<com.gstech.betTest.model.SavedBet>> getAllBets() {
+        return ResponseEntity.ok(scannerService.getAllSavedBets());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBet(@PathVariable Long id) {
+        scannerService.deleteBet(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/update-result/{id}")
+    public ResponseEntity<com.gstech.betTest.model.SavedBet> updateResult(@PathVariable Long id, @RequestBody java.util.Map<String, String> payload) {
+        String finalScore = payload.get("finalScore");
+        return ResponseEntity.ok(scannerService.updateMatchResult(id, finalScore));
+    }
 }

@@ -8,14 +8,14 @@ public class ScannerResponse {
     private double awayAvgScored;
     private double awayAvgConceded;
 
-    // Percentage of Over 2.5 in last 5 games
+    // Percentage of Over 1.5 in last 5 games
     private double homeOverPercent;
     private double awayOverPercent;
 
     // Predictions
     private double expectedTotalGoals;
-    private double probabilityOver25;
-    private double fairOddOver25;
+    private double probabilityOver15;
+    private double fairOddOver15;
 
     // Analysis
     private double marketOdd;
@@ -30,8 +30,8 @@ public class ScannerResponse {
     private double awayProbOver15;
 
     public ScannerResponse(double homeAvgScored, double homeAvgConceded, double awayAvgScored, double awayAvgConceded,
-            double homeOverPercent, double awayOverPercent, double expectedTotalGoals, double probabilityOver25,
-            double fairOddOver25, double marketOdd, boolean isValueBet, String confidenceLevel, double probabilityBTTS,
+            double homeOverPercent, double awayOverPercent, double expectedTotalGoals, double probabilityOver15,
+            double fairOddOver15, double marketOdd, boolean isValueBet, String confidenceLevel, double probabilityBTTS,
             double homeProbOver05, double homeProbOver15, double awayProbOver05, double awayProbOver15) {
         this.homeAvgScored = homeAvgScored;
         this.homeAvgConceded = homeAvgConceded;
@@ -40,8 +40,8 @@ public class ScannerResponse {
         this.homeOverPercent = homeOverPercent;
         this.awayOverPercent = awayOverPercent;
         this.expectedTotalGoals = expectedTotalGoals;
-        this.probabilityOver25 = probabilityOver25;
-        this.fairOddOver25 = fairOddOver25;
+        this.probabilityOver15 = probabilityOver15;
+        this.fairOddOver15 = fairOddOver15;
         this.marketOdd = marketOdd;
         this.isValueBet = isValueBet;
         this.confidenceLevel = confidenceLevel;
@@ -108,20 +108,20 @@ public class ScannerResponse {
         this.expectedTotalGoals = totalXG;
     }
 
-    public double getProbabilityOver25() {
-        return probabilityOver25;
+    public double getProbabilityOver15() {
+        return probabilityOver15;
     }
 
-    public void setProbabilityOver25(double probabilityOver25) {
-        this.probabilityOver25 = probabilityOver25;
+    public void setProbabilityOver15(double probabilityOver15) {
+        this.probabilityOver15 = probabilityOver15;
     }
 
-    public double getFairOddOver25() {
-        return fairOddOver25;
+    public double getFairOddOver15() {
+        return fairOddOver15;
     }
 
-    public void setFairOddOver25(double fairOddOver25) {
-        this.fairOddOver25 = fairOddOver25;
+    public void setFairOddOver15(double fairOddOver15) {
+        this.fairOddOver15 = fairOddOver15;
     }
 
     public double getMarketOdd() {
