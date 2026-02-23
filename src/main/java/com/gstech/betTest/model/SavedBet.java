@@ -30,6 +30,11 @@ public class SavedBet {
     private String finalScore; // ex: "2-1"
     private String resultOutcome = "PENDENTE"; // WIN, LOSS, PENDING
 
+    // Relacionamento com a Múltipla (Parlay) — null se for aposta simples
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parlay_id")
+    private Parlay parlay;
+
     private LocalDateTime createdAt;
 
     @PrePersist
@@ -175,5 +180,13 @@ public class SavedBet {
 
     public void setResultOutcome(String resultOutcome) {
         this.resultOutcome = resultOutcome;
+    }
+
+    public Parlay getParlay() {
+        return parlay;
+    }
+
+    public void setParlay(Parlay parlay) {
+        this.parlay = parlay;
     }
 }

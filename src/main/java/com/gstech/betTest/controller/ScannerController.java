@@ -22,14 +22,27 @@ public class ScannerController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<com.gstech.betTest.model.SavedBet> saveBet(@RequestBody com.gstech.betTest.model.SavedBet bet) {
+    public ResponseEntity<com.gstech.betTest.model.SavedBet> saveBet(
+            @RequestBody com.gstech.betTest.model.SavedBet bet) {
         com.gstech.betTest.model.SavedBet saved = scannerService.saveBet(bet);
+        return ResponseEntity.ok(saved);
+    }
+
+    @PostMapping("/save-parlay")
+    public ResponseEntity<com.gstech.betTest.model.Parlay> saveParlay(
+            @RequestBody com.gstech.betTest.model.Parlay parlay) {
+        com.gstech.betTest.model.Parlay saved = scannerService.saveParlay(parlay);
         return ResponseEntity.ok(saved);
     }
 
     @GetMapping("/all")
     public ResponseEntity<java.util.List<com.gstech.betTest.model.SavedBet>> getAllBets() {
         return ResponseEntity.ok(scannerService.getAllSavedBets());
+    }
+
+    @GetMapping("/all-parlays")
+    public ResponseEntity<java.util.List<com.gstech.betTest.model.Parlay>> getAllParlays() {
+        return ResponseEntity.ok(scannerService.getAllParlays());
     }
 
     @DeleteMapping("/{id}")
@@ -39,7 +52,8 @@ public class ScannerController {
     }
 
     @PutMapping("/update-result/{id}")
-    public ResponseEntity<com.gstech.betTest.model.SavedBet> updateResult(@PathVariable Long id, @RequestBody java.util.Map<String, String> payload) {
+    public ResponseEntity<com.gstech.betTest.model.SavedBet> updateResult(@PathVariable Long id,
+            @RequestBody java.util.Map<String, String> payload) {
         String finalScore = payload.get("finalScore");
         return ResponseEntity.ok(scannerService.updateMatchResult(id, finalScore));
     }

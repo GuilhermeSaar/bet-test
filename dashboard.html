@@ -246,6 +246,50 @@
             padding: 50px;
             color: #64748b;
         }
+
+        /* Parlay Group Styling */
+        .parlay-group {
+            grid-column: 1 / -1;
+            background: rgba(251, 191, 36, 0.03);
+            border: 1px dashed rgba(251, 191, 36, 0.2);
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .parlay-group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(251, 191, 36, 0.1);
+        }
+
+        .parlay-group-title {
+            color: #fbbf24;
+            font-size: 1.2rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .parlay-tag {
+            background: #fbbf24;
+            color: #0f172a;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 900;
+        }
+
+        .parlay-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
     </style>
 </head>
 
@@ -264,86 +308,135 @@
     <script>
         async function fetchBets() {
             try {
-                const response = await fetch('http://localhost:8080/api/scanner/all');
-                if (!response.ok) throw new Error("Erro ao buscar apostas");
-                const bets = await response.json();
-                renderBets(bets);
+                // Buscar ambos: individuais e múltiplas
+                const [resSingle, resParlay] = await Promise.all([
+                    fetch('http://localhost:8080/api/scanner/all'),
+                    fetch('http://localhost:8080/api/scanner/all-parlays')
+                ]);
+
+                if (!resSingle.ok || !resParlay.ok) throw new Error("Erro ao buscar dados");
+
+                const allBets = await resSingle.json();
+                const allParlays = await resParlay.json();
+
+                renderBets(allBets, allParlays);
             } catch (error) {
                 console.error(error);
-                document.getElementById('betsGrid').innerHTML = '<div class="empty-state">Erro ao carregar apostas. Verifique se o servidor está rodando.</div>';
+                document.getElementById('betsGrid').innerHTML = '<div class="empty-state">Erro ao carregar dados. Verifique o servidor.</div>';
             }
         }
 
-        function renderBets(bets) {
+        function renderBets(bets, parlays) {
             const grid = document.getElementById('betsGrid');
             grid.innerHTML = "";
 
-            if (bets.length === 0) {
+            if (bets.length === 0 && parlays.length === 0) {
                 grid.innerHTML = '<div class="empty-state">Nenhuma aposta salva no banco ainda.</div>';
                 return;
             }
 
-            // Exibir as mais recentes primeiro
-            bets.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            // Precisamos filtrar apostas que já estão dentro de um parlay para não duplicar
+            // Mas no novo modelo, ao buscar 'all' (SavedBet), elas vêm com a FK.
+            // No Dashboard antigo eu agrupava por ID. Agora eu exibo os Objetos Parlay diretamente.
 
-            bets.forEach(bet => {
-                const card = document.createElement('div');
-                card.className = 'card';
+            // 1. Renderizar Parlays primeiro (Múltiplas)
+            parlays.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            parlays.forEach(parlay => {
+                const groupContainer = document.createElement('div');
+                groupContainer.className = 'parlay-group';
 
-                const date = new Date(bet.createdAt).toLocaleString('pt-BR');
-                const badgeClass = bet.isValueBet ? 'badge-value' : 'badge-no-value';
-                const badgeText = bet.isValueBet ? 'VALOR ✅' : 'SEM VALOR';
+                const date = new Date(parlay.createdAt).toLocaleString('pt-BR');
+                const groupOdd = parlay.totalOdd ? parlay.totalOdd.toFixed(2) : '--';
+                const groupProb = parlay.totalProbability ? parlay.totalProbability.toFixed(1) : '--';
 
-                // Resultado final
-                const outcome = bet.resultOutcome || 'PENDENTE';
-                let outcomeBadgeClass = 'badge-pending';
-                let outcomeText = 'PENDENTE';
-
-                if (outcome === 'WIN') {
-                    outcomeBadgeClass = 'badge-win';
-                    outcomeText = 'WIN ✅';
-                    card.style.borderColor = 'var(--accent-color)';
-                } else if (outcome === 'LOSS') {
-                    outcomeBadgeClass = 'badge-loss';
-                    outcomeText = 'LOSS ❌';
-                    card.style.borderColor = 'var(--danger-color)';
-                }
-
-                card.innerHTML = `
-                    <button class="delete-btn" onclick="deleteBet(${bet.id})">Excluir</button>
-                    <div class="match-header">${bet.homeTeam} x ${bet.awayTeam}</div>
-                    <div class="stats-list">
-                        <div>Prob. Over 1.5: <span>${bet.probabilityOver15}%</span></div>
-                        <div>Odd Mercado: <span>${bet.marketOdd.toFixed(2)}</span></div>
-                        
-                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05);">
-                            <div>Casa xG: <span>${bet.homeAvgScored.toFixed(1)} / ${bet.homeAvgConceded.toFixed(1)}</span></div>
-                            <div>Vis. xG: <span>${bet.awayAvgScored.toFixed(1)} / ${bet.awayAvgConceded.toFixed(1)}</span></div>
+                groupContainer.innerHTML = `
+                    <div class="parlay-group-header">
+                        <div class="parlay-group-title">
+                            <span class="parlay-tag">Múltipla</span>
+                            🎯 ${parlay.bets.length} jogos | Odd: <span style="color:#ffffff; margin-left:5px;">${groupOdd}</span> | Prob: <span style="color:#ffffff; margin-left:5px;">${groupProb}%</span>
                         </div>
-
-                        <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: flex-end;">
-                            <div>
-                                <span class="badge ${badgeClass}">${badgeText}</span><br>
-                                <span class="badge ${outcomeBadgeClass}">${outcomeText}</span>
-                            </div>
-                            <div style="text-align: right;">
-                                ${bet.finalScore ? `<div class="final-score-display">${bet.finalScore}</div>` : ''}
-                                <div style="font-size: 0.7rem; color: #64748b; margin-top: 5px;">${date}</div>
-                            </div>
-                        </div>
-
-                        ${outcome === 'PENDENTE' ? `
-                            <div class="result-entry">
-                                <input type="number" id="home-${bet.id}" class="score-input" placeholder="0">
-                                <span style="color: #64748b; font-weight: bold;">-</span>
-                                <input type="number" id="away-${bet.id}" class="score-input" placeholder="0">
-                                <button class="submit-btn" onclick="submitResult(${bet.id})">OK</button>
-                            </div>
-                        ` : ''}
+                        <div style="font-size: 0.8rem; color: #64748b;">Criada em ${date} [ID: ${parlay.id}]</div>
                     </div>
+                    <div class="parlay-grid"></div>
                 `;
+
+                const parlayGrid = groupContainer.querySelector('.parlay-grid');
+                parlay.bets.forEach(bet => {
+                    const card = createBetCard(bet);
+                    parlayGrid.appendChild(card);
+                });
+
+                grid.appendChild(groupContainer);
+            });
+
+            // 2. Renderizar Apostas Simples (onde parlay é null ou não definido)
+            // Filtro: apenas bets que não têm parlayId (ou objeto parlay no JSON)
+            const singleBets = bets.filter(bet => !bet.parlay);
+            singleBets.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            singleBets.forEach(bet => {
+                const card = createBetCard(bet);
                 grid.appendChild(card);
             });
+        }
+
+        function createBetCard(bet) {
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            const date = new Date(bet.createdAt).toLocaleString('pt-BR');
+            const badgeClass = bet.isValueBet ? 'badge-value' : 'badge-no-value';
+            const badgeText = bet.isValueBet ? 'VALOR ✅' : 'SEM VALOR';
+
+            // Resultado final
+            const outcome = bet.resultOutcome || 'PENDENTE';
+            let outcomeBadgeClass = 'badge-pending';
+            let outcomeText = 'PENDENTE';
+
+            if (outcome === 'WIN') {
+                outcomeBadgeClass = 'badge-win';
+                outcomeText = 'WIN ✅';
+                card.style.borderColor = 'var(--accent-color)';
+            } else if (outcome === 'LOSS') {
+                outcomeBadgeClass = 'badge-loss';
+                outcomeText = 'LOSS ❌';
+                card.style.borderColor = 'var(--danger-color)';
+            }
+
+            card.innerHTML = `
+                <button class="delete-btn" onclick="deleteBet(${bet.id})">Excluir</button>
+                <div class="match-header">${bet.homeTeam} x ${bet.awayTeam}</div>
+                <div class="stats-list">
+                    <div>Prob. Over 1.5: <span>${bet.probabilityOver15}%</span></div>
+                    <div>Odd Mercado: <span>${bet.marketOdd.toFixed(2)}</span></div>
+                    
+                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05);">
+                        <div>Casa xG: <span>${bet.homeAvgScored.toFixed(1)} / ${bet.homeAvgConceded.toFixed(1)}</span></div>
+                        <div>Vis. xG: <span>${bet.awayAvgScored.toFixed(1)} / ${bet.awayAvgConceded.toFixed(1)}</span></div>
+                    </div>
+
+                    <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div>
+                            <span class="badge ${badgeClass}">${badgeText}</span><br>
+                            <span class="badge ${outcomeBadgeClass}">${outcomeText}</span>
+                        </div>
+                        <div style="text-align: right;">
+                            ${bet.finalScore ? `<div class="final-score-display">${bet.finalScore}</div>` : ''}
+                            <div style="font-size: 0.7rem; color: #64748b; margin-top: 5px;">${date}</div>
+                        </div>
+                    </div>
+
+                    ${outcome === 'PENDENTE' ? `
+                        <div class="result-entry">
+                            <input type="number" id="home-${bet.id}" class="score-input" placeholder="0">
+                            <span style="color: #64748b; font-weight: bold;">-</span>
+                            <input type="number" id="away-${bet.id}" class="score-input" placeholder="0">
+                            <button class="submit-btn" onclick="submitResult(${bet.id})">OK</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            return card;
         }
 
         async function deleteBet(id) {

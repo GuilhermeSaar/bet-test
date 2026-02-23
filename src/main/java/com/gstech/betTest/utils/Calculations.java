@@ -9,11 +9,11 @@ public class Calculations {
     public static double finalProbability(double probabilityPoisson, double homeStatsOverPercent,
             double awayStatsOverPercent) {
 
-        // Peso dinâmico
+        // Peso dinâmico — threshold elevado para 0.80
         double weightPoisson;
         double weightHistory;
 
-        if (homeStatsOverPercent >= 0.60 && awayStatsOverPercent >= 0.60) {
+        if (homeStatsOverPercent >= 0.80 && awayStatsOverPercent >= 0.76) {
             weightHistory = 0.65;
             weightPoisson = 0.35;
         } else {
@@ -27,9 +27,10 @@ public class Calculations {
     }
 
     public static boolean isRiskyMatch(double expectedGoals, double homeOverPercent, double awayOverPercent) {
+        // Thresholds mais altos para Over 1.5
         return expectedGoals < 1.50 ||
-                homeOverPercent < 0.55 ||
-                awayOverPercent < 0.50;
+                homeOverPercent < 0.70 ||
+                awayOverPercent < 0.65;
     }
 
     // Calcula o Expected Goals usando média geométrica (Ataque x Defesa).
@@ -44,7 +45,7 @@ public class Calculations {
     }
 
     // pega os placares de um time, calcula médias de gols feitos, sofridos e a
-    // porcentagem de jogos com mais de 2.5 gols
+    // porcentagem de jogos com mais de 1.5 gols
     public static TeamStats calculateStats(List<String> matches) {
 
         if (matches == null || matches.isEmpty()) {

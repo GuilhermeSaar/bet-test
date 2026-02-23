@@ -11,19 +11,33 @@ public class ScannerService {
 
     private final ProbabilityService probabilityService;
     private final com.gstech.betTest.repository.SavedBetRepository savedBetRepository;
+    private final com.gstech.betTest.repository.ParlayRepository parlayRepository;
 
     public ScannerService(ProbabilityService probabilityService,
-            com.gstech.betTest.repository.SavedBetRepository savedBetRepository) {
+            com.gstech.betTest.repository.SavedBetRepository savedBetRepository,
+            com.gstech.betTest.repository.ParlayRepository parlayRepository) {
         this.probabilityService = probabilityService;
         this.savedBetRepository = savedBetRepository;
+        this.parlayRepository = parlayRepository;
     }
 
     public com.gstech.betTest.model.SavedBet saveBet(com.gstech.betTest.model.SavedBet bet) {
         return savedBetRepository.save(bet);
     }
 
+    public com.gstech.betTest.model.Parlay saveParlay(com.gstech.betTest.model.Parlay parlay) {
+        // Garantir que o vínculo bidirecional está correto antes de salvar (cascade
+        // persiste as bets)
+        parlay.getBets().forEach(bet -> bet.setParlay(parlay));
+        return parlayRepository.save(parlay);
+    }
+
     public java.util.List<com.gstech.betTest.model.SavedBet> getAllSavedBets() {
         return savedBetRepository.findAll();
+    }
+
+    public java.util.List<com.gstech.betTest.model.Parlay> getAllParlays() {
+        return parlayRepository.findAll();
     }
 
     public void deleteBet(Long id) {
@@ -124,7 +138,9 @@ public class ScannerService {
                 fairOddForResponse,
                 marketOdd,
                 isValue,
-                isValue ? (edge > 0.15 ? "Alta" : edge > 0.05 ? "Média" : "Baixa") : "Mínima",
+                // Thresholds de confiança ajustados para Over 1.5 (odds comprimidas: 1.20-1.50)
+                // Margens menores que Over 2.5, então reduzimos os thresholds de edge
+                isValue ? (edge > 0.10 ? "Alta" : edge > 0.03 ? "Média" : "Baixa") : "Mínima",
                 Calculations.round(markets.get("BTTS") * 100, 1),
                 Calculations.round(homeOver05 * 100, 1),
                 Calculations.round(homeOver15 * 100, 1),
